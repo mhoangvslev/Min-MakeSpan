@@ -1,43 +1,133 @@
+import numpy as np
 
-def isValid(seq: string):
+def getTokenIfValid(seq: str):
     tokens = seq.split(":")
-
-    if(len(tokens) <= 2):
-        file = open(seq, "r")
-        tokens = file.readline().split(":")
-        if(len(tokens) <= 2):
-            return None
-
-    m, n = tokens[0], tokens[1]
-    if(n != len(tokens[2:len(tokens)])):
+    m, n, tasks = int(tokens[0]), int(tokens[1]), tokens[2:len(tokens)]
+    if(n != len(tasks)):
         print("Il n'y a pas assez de tâches, il en faut n(", n, ")")
         return None
 
     return tokens
 
 def main():
-    tokens = None
-    while(tokens != None):
-        print("Enter fileName.txt or the sequence")
-        stdin = input()
-        tokens = isValid(stdin)
-    
-    m, n = int(tokens[0]), int(tokens[1])
-    tasks = tokens[2:len(tokens)]
+    canStart = False
+    mode = -1
+    while(not canStart):
+        mode = -1
+        while(mode not in range(4)):
+            print("Choisissez le mode: 0 - fichier, 1 - clavier, 2 - I_m, 3 - I_R")
+            mode = int(input())
+        
+        # Mode I_f
+        if(mode == 0):
+            print("Saisissez le nom du fichier")
+            file = open(input(), "r")
+            instance = getTokenIfValid(file.readline())
+            file.close()
+            canStart = True
+        
+        # Mode I_c
+        elif(mode == 1):
+            print("Saisissez la séquence m:n:d1:d2:...:dn")
+            instance = getTokenIfValid(input())
+            canStart = True
 
-def LSA(m: int, n: int, tasks):
-    M = dict()
-    for i in range(1, m+1):
-        M[i] = []
+        # Mode I_m
+        elif(mode == 2):
+            print("Saisissez m: ")
+            m = int(input())
+            tasks = np.concatenate((
+               [m for i in range(3)],
+               np.repeat([m + i for i in range(1, m)], 2)
+            ))
+
+            print(tasks)
+            instance = np.concatenate(([m, len(tasks)], tasks))
+            canStart = True
+        
+        # Mode I_R
+        elif(mode == 3):
+            instance = []
+            print("Saisissez n, m, k, min, max. Par exemple: 'n m k min max'")
+            n, m, k, low, high = [int(item) for item in input().split()]
+            for i in range(k):
+                instance = instance.append(
+                    np.concatenate((m, n, np.random.random_integers(low, high, size=n)))
+                )
+            canStart = True
+
+
+    if(mode != 3):
+        m, n, tasks = int(instance[0]), int(instance[1]), [int(task) for task in instance[2:len(instance)]]
+        print("Borne inférieure \"maximum\" = ")
+        print("Borne inférieure \"moyenne\" = ")
+
+        # LSA
+        lsa_sol = LSA(m, tasks)
+        lsa_load = dict(map(lambda item: (item[0], sum(item[1])), lsa_sol.items())) 
+        lsa_mes = max(lsa_load.values())
+        print("Résultat LSA = ", lsa_sol, " measure: ", lsa_mes)
+        print("Ratio LSA = ", round(lsa_mes/(n/m), 3))
+
+        # LPT
+        lpt_sol = LPT(m, tasks)
+        lpt_load = dict(map(lambda item: (item[0], sum(item[1])), lpt_sol.items())) 
+        lpt_mes = max(lpt_load.values())
+        print("Résultat LPT = ", lpt_sol, " measure: ", lpt_mes)
+        print("Ratio LPT = ", round(lpt_mes/(n/m), 3))
+
+        # MyAlgo
+        myalgo_sol = LPT(m, tasks)
+        myalgo_load = dict(map(lambda item: (item[0], sum(item[1])), myalgo_sol.items())) 
+        myalgo_mes = max(myalgo_load.values())
+        print("Résultat MyAlgo = ", myalgo_sol, " measure: ", myalgo_mes)
+        print("Ratio MyAlgo = ", round(myalgo_mes/(n/m), 3))
+
+def LSA(m: int, tasks: list):
+    """Les tâches seront traités dans l'ordre tel qu'elles sont fournies"""
+
+    M = dict([(i, []) for i in range(1, m+1)])
     
     for task in tasks:
         availIdx = 1
-        for macIdx in M.keys():
-            if len(M[macIdx]) == 0: # Free machine
-                availIdx = macIdx
-                break
-            elif M[macIdx][-1] < task and M[macIdx][-1] < M[availIdx][-1]:
-                availIdx = macIdx
+        loads = dict(map(lambda item: (item[0], sum(item[1])), M.items())) 
+        availIdx = min(loads, key=loads.get)
         M[availIdx].append(task)
     
     return M
+
+def LPT(m: int, tasks: list):
+    """Les tâches seront traités dans l'ordre décroissant de leur durée"""
+
+    M = dict([(i, []) for i in range(1, m+1)])
+    tasks = np.sort(tasks, kind="mergesort")[::-1] # Trier selon l'ordre décroissant, O(n*log(n)) mergesort 
+    #tasks = np.sort(tasks)[::-1] # O(n^2) quicksort par défaut
+    
+    for task in tasks:
+        availIdx = 1
+        loads = dict(map(lambda item: (item[0], sum(item[1])), M.items())) 
+        availIdx = min(loads, key=loads.get)
+        M[availIdx].append(task)
+    
+    return M
+
+def MyAlgo(m: int, tasks: list):
+    """Affecter les tâches en utilisant le principe du Min Binpacking. On va essayer de faire m bins de capacité ~opt """
+
+    M = dict([(i, []) for i in range(1, m+1)])
+    opt = np.ceil(len(tasks)/m)
+    tasks = tasks = np.sort(tasks, kind="mergesort")
+    
+    # 
+    macIdx = 1
+    for task in tasks:
+        if(macIdx < m - 1):
+            while(sum(M[macIdx]) <= opt):
+                M[macIdx].append(task)
+            macIdx += 1
+        else:
+            M[macIdx].append(task)
+    
+    return M
+
+main()
