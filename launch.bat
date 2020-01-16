@@ -1,1 +1,1 @@
-python makespan.py
+python3 makespan.py
