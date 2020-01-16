@@ -1,6 +1,7 @@
 import numpy as np
 
 def getTokenIfValid(seq: str):
+    """Parse l'entrée et transforme en array"""
     tokens = seq.split(":")
     m, n, tasks = int(tokens[0]), int(tokens[1]), tokens[2:len(tokens)]
     if(n != len(tasks)):
@@ -47,20 +48,22 @@ def main():
         
         # Mode I_R
         elif(mode == 3):
-            instance = []
+            instances = []
             print("Saisissez n, m, k, min, max. Par exemple: 'n m k min max'")
             n, m, k, low, high = [int(item) for item in input().split()]
+            print(n, m, k, low, high)
             for i in range(k):
-                instance = instance.append(
-                    np.concatenate((m, n, np.random.random_integers(low, high, size=n)))
+                instances.append(
+                    np.concatenate(([m, n], np.random.random_integers(low, high, size=n)))
                 )
+                            
             canStart = True
 
 
     if(mode != 3):
         m, n, tasks = int(instance[0]), int(instance[1]), [int(task) for task in instance[2:len(instance)]]
-        print("Borne inférieure \"maximum\" = ")
-        print("Borne inférieure \"moyenne\" = ")
+        print("Borne inférieure \"maximum\" = ", max(tasks))
+        print("Borne inférieure \"moyenne\" = ", sum(tasks)/m)
 
         # LSA
         lsa_sol = LSA(m, tasks)
@@ -82,6 +85,47 @@ def main():
         myalgo_mes = max(myalgo_load.values())
         print("Résultat MyAlgo = ", myalgo_sol, " measure: ", myalgo_mes)
         print("Ratio MyAlgo = ", round(myalgo_mes/(n/m), 3))
+    else:
+        lsa_mes, lpt_mes, myalgo_mes = [], [], []
+        for instance in instances:
+            m, n, tasks = int(instance[0]), int(instance[1]), [int(task) for task in instance[2:len(instance)]]
+            
+            # LSA
+            lsa_sol = LSA(m, tasks)
+            lsa_mes.append(
+                max(dict(
+                    map(
+                        lambda item: (item[0], 
+                        sum(item[1])), lsa_sol.items()
+                    )
+                ).values())/(n/m)
+            )
+
+            # LPT
+            lpt_sol = LPT(m, tasks)
+            lpt_mes.append(
+                max(dict(
+                    map(
+                        lambda item: (item[0], 
+                        sum(item[1])), lpt_sol.items()
+                    )
+                ).values())/(n/m)
+            )
+
+            # MyAlgo
+            myalgo_sol = LSA(m, tasks)
+            myalgo_mes.append(
+                max(dict(
+                    map(
+                        lambda item: (item[0], 
+                        sum(item[1])), myalgo_sol.items()
+                    )
+                ).values())/(n/m)
+            )
+        
+        print("ratio moyen LSA =", round(np.mean(lsa_mes), 3))
+        print("ratio moyen LPT =", round(np.mean(lpt_mes), 3))
+        print("ratio moyen MyAlgo =", round(np.mean(myalgo_mes), 3))
 
 def LSA(m: int, tasks: list):
     """Les tâches seront traités dans l'ordre tel qu'elles sont fournies"""
