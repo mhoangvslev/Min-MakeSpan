@@ -42,7 +42,6 @@ def main():
                np.repeat([m + i for i in range(1, m)], 2)
             ))
 
-            print(tasks)
             instance = np.concatenate(([m, len(tasks)], tasks))
             canStart = True
         
@@ -51,7 +50,6 @@ def main():
             instances = []
             print("Saisissez n, m, k, min, max. Par exemple: 'n m k min max'")
             n, m, k, low, high = [int(item) for item in input().split()]
-            print(n, m, k, low, high)
             for i in range(k):
                 instances.append(
                     np.concatenate(([m, n], np.random.randint(low, high+1, size=n)))
@@ -69,21 +67,21 @@ def main():
         lsa_sol = LSA(m, tasks)
         lsa_load = dict(map(lambda item: (item[0], sum(item[1])), lsa_sol.items())) 
         lsa_mes = max(lsa_load.values())
-        print("Résultat LSA = ", lsa_sol, " measure: ", lsa_mes)
+        print("Résultat LSA = ", lsa_mes)
         print("Ratio LSA = ", round(lsa_mes/(sum(tasks)/m), 3))
 
         # LPT
         lpt_sol = LPT(m, tasks)
         lpt_load = dict(map(lambda item: (item[0], sum(item[1])), lpt_sol.items())) 
         lpt_mes = max(lpt_load.values())
-        print("Résultat LPT = ", lpt_sol, " measure: ", lpt_mes)
+        print("Résultat LPT = ", lpt_mes)
         print("Ratio LPT = ", round(lpt_mes/(sum(tasks)/m), 3))
 
         # MyAlgo
         myalgo_sol = LPT(m, tasks)
         myalgo_load = dict(map(lambda item: (item[0], sum(item[1])), myalgo_sol.items())) 
         myalgo_mes = max(myalgo_load.values())
-        print("Résultat MyAlgo = ", myalgo_sol, " measure: ", myalgo_mes)
+        print("Résultat MyAlgo = ", myalgo_mes)
         print("Ratio MyAlgo = ", round(myalgo_mes/(sum(tasks)/m), 3))
     else:
         lsa_mes, lpt_mes, myalgo_mes = [], [], []
@@ -156,7 +154,7 @@ def LPT(m: int, tasks: list):
     return M
 
 def MyAlgo(m: int, tasks: list):
-    """Affecter les tâches en utilisant le principe du Min Binpacking. On va essayer de faire m bins de capacité ~opt """
+    """Affecter les tâches en utilisant le principe du First-Fit Algorithm. On va essayer de faire m bins de capacité ~opt """
 
     M = dict([(i, []) for i in range(1, m+1)])
     opt = np.ceil(len(tasks)/m)
