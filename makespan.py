@@ -54,7 +54,7 @@ def main():
             print(n, m, k, low, high)
             for i in range(k):
                 instances.append(
-                    np.concatenate(([m, n], np.random.random_integers(low, high, size=n)))
+                    np.concatenate(([m, n], np.random.randint(low, high+1, size=n)))
                 )
                             
             canStart = True
@@ -70,21 +70,21 @@ def main():
         lsa_load = dict(map(lambda item: (item[0], sum(item[1])), lsa_sol.items())) 
         lsa_mes = max(lsa_load.values())
         print("Résultat LSA = ", lsa_sol, " measure: ", lsa_mes)
-        print("Ratio LSA = ", round(lsa_mes/(n/m), 3))
+        print("Ratio LSA = ", round(lsa_mes/(sum(tasks)/m), 3))
 
         # LPT
         lpt_sol = LPT(m, tasks)
         lpt_load = dict(map(lambda item: (item[0], sum(item[1])), lpt_sol.items())) 
         lpt_mes = max(lpt_load.values())
         print("Résultat LPT = ", lpt_sol, " measure: ", lpt_mes)
-        print("Ratio LPT = ", round(lpt_mes/(n/m), 3))
+        print("Ratio LPT = ", round(lpt_mes/(sum(tasks)/m), 3))
 
         # MyAlgo
         myalgo_sol = LPT(m, tasks)
         myalgo_load = dict(map(lambda item: (item[0], sum(item[1])), myalgo_sol.items())) 
         myalgo_mes = max(myalgo_load.values())
         print("Résultat MyAlgo = ", myalgo_sol, " measure: ", myalgo_mes)
-        print("Ratio MyAlgo = ", round(myalgo_mes/(n/m), 3))
+        print("Ratio MyAlgo = ", round(myalgo_mes/(sum(tasks)/m), 3))
     else:
         lsa_mes, lpt_mes, myalgo_mes = [], [], []
         for instance in instances:
@@ -98,7 +98,7 @@ def main():
                         lambda item: (item[0], 
                         sum(item[1])), lsa_sol.items()
                     )
-                ).values())/(n/m)
+                ).values())/(sum(tasks)/m)
             )
 
             # LPT
@@ -109,7 +109,7 @@ def main():
                         lambda item: (item[0], 
                         sum(item[1])), lpt_sol.items()
                     )
-                ).values())/(n/m)
+                ).values())/(sum(tasks)/m)
             )
 
             # MyAlgo
@@ -120,7 +120,7 @@ def main():
                         lambda item: (item[0], 
                         sum(item[1])), myalgo_sol.items()
                     )
-                ).values())/(n/m)
+                ).values())/(sum(tasks)/m)
             )
         
         print("ratio moyen LSA =", round(np.mean(lsa_mes), 3))
